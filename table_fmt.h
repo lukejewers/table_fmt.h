@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,13 +123,23 @@ typedef struct {
 
 static inline bool table_fmt__realloc(TableFmt *table)
 {
-    if (table->row_data_count + table->config.num_cols > table->row_data_capacity) {
-        size_t new_cap = table->row_data_capacity * 2;
-        const char **new_buffer = realloc(table->row_data, sizeof(char *) * new_cap);
-        if (!new_buffer) return false;
-        table->row_data = new_buffer;
-        table->row_data_capacity = new_cap;
+    size_t needed = table->row_data_count + table->config.num_cols;
+    if (needed <= table->row_data_capacity) return true;
+
+    size_t new_cap = table->row_data_capacity;
+    while (new_cap < needed) {
+        if (new_cap > SIZE_MAX / 2) {
+            new_cap = needed;
+            break;
+        }
+        new_cap *= 2;
     }
+
+    const char **new_buffer = realloc(table->row_data, sizeof(char *) * new_cap);
+    if (!new_buffer) return false;
+
+    table->row_data = new_buffer;
+    table->row_data_capacity = new_cap;
     return true;
 }
 
