@@ -43,18 +43,19 @@
 */
 
 typedef enum {
-    TABLE_FMT_OUTPUT_BORDERS,  /* Bordered table */
-    TABLE_FMT_OUTPUT_CSV,      /* Comma-separated values */
-    TABLE_FMT_OUTPUT_SPACE,    /* Space-separated */
-    TABLE_FMT_OUTPUT_PIPE,     /* Pipe-delimited */
+    TABLE_FMT_OUTPUT_BORDERS,    /* Bordered table */
+    TABLE_FMT_OUTPUT_CSV,        /* Comma-separated values */
+    TABLE_FMT_OUTPUT_SPACE,      /* Space-separated */
+    TABLE_FMT_OUTPUT_PIPE,       /* Pipe-delimited */
 } TableFmtOutput;
 
 typedef enum {
-    TABLE_FMT_BORDER_SINGLE,   /* Single border:  ┌─────┐ */
-    TABLE_FMT_BORDER_DOUBLE,   /* Double border:  ╔═════╗ */
-    TABLE_FMT_BORDER_ROUND,    /* Rounded border: ╭─────╮ */
-    TABLE_FMT_BORDER_ASCII,    /* Ascii border:   +-----+ */
-    TABLE_FMT_BORDER_PIPE,     /* Pipe border:    | --- | */
+    TABLE_FMT_BORDER_SINGLE,     /* Single border:  ┌─────┐ */
+    TABLE_FMT_BORDER_DOUBLE,     /* Double border:  ╔═════╗ */
+    TABLE_FMT_BORDER_ROUND,      /* Rounded border: ╭─────╮ */
+    TABLE_FMT_BORDER_ASCII,      /* Ascii border:   +-----+ */
+    TABLE_FMT_BORDER_PIPE,       /* Pipe border:    | --- | */
+    TABLE_FMT_BORDER_TYPE_COUNT, /* Sentinel */
 } TableFmtBorderType;
 
 typedef enum {
@@ -111,6 +112,9 @@ static const char * const TABLE_FMT__BORDER_SETS[][TABLE_FMT__BORDER_COUNT] = {
     {"+", "+", "+", "+", "+", "+", "+", "+", "+", "-", "|"}, /* TABLE_FMT_BORDER_ASCII */
     {" ", " ", " ", "|", "|", "|", " ", " ", " ", "-", "|"}  /* TABLE_FMT_BORDER_PIPE */
 };
+
+_Static_assert(sizeof TABLE_FMT__BORDER_SETS / sizeof TABLE_FMT__BORDER_SETS[0] == TABLE_FMT_BORDER_TYPE_COUNT,
+               "border set table and TableFmtBorderType out of sync");
 
 typedef struct {
     size_t left;
@@ -213,8 +217,15 @@ static inline void table_fmt__print_csv(const TableFmt *table)
 
 static inline TableFmtBorderType table_fmt__get_border_type(const TableFmt *table)
 {
-    if (table->config.output_format == TABLE_FMT_OUTPUT_PIPE) return TABLE_FMT_BORDER_PIPE;
-    return table->config.border_type < 5 ? table->config.border_type : 0;
+    if (table->config.output_format == TABLE_FMT_OUTPUT_PIPE)
+        return TABLE_FMT_BORDER_PIPE;
+
+    TableFmtBorderType border_type = table->config.border_type;
+    if (border_type >= TABLE_FMT_BORDER_TYPE_COUNT) {
+        return TABLE_FMT_BORDER_SINGLE;
+    }
+
+    return border_type;
 }
 
 static inline void table_fmt__write_spaces(FILE *out, size_t n)
