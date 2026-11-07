@@ -211,7 +211,7 @@ static inline void table_fmt__print_csv(const TableFmt *table)
     }
 }
 
-static inline size_t table_fmt__get_border_type(const TableFmt *table)
+static inline TableFmtBorderType table_fmt__get_border_type(const TableFmt *table)
 {
     if (table->config.output_format == TABLE_FMT_OUTPUT_PIPE) return TABLE_FMT_BORDER_PIPE;
     return table->config.border_type < 5 ? table->config.border_type : 0;
@@ -265,7 +265,7 @@ static inline void table_fmt__print_bordered(const TableFmt *table)
     if (!col_widths) return;
     table_fmt__calc_col_widths(table, col_widths);
 
-    size_t style = table_fmt__get_border_type(table);
+    TableFmtBorderType style = table_fmt__get_border_type(table);
 
     if (table->config.output_format != TABLE_FMT_OUTPUT_PIPE) {
         table_fmt__print_border_line(table, col_widths, style, TABLE_FMT__BORDER_TOP_LEFT, TABLE_FMT__BORDER_TOP_MIDDLE, TABLE_FMT__BORDER_TOP_RIGHT);
