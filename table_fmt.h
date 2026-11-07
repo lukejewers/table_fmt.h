@@ -9,6 +9,36 @@
 #include <string.h>
 
 /*
+** Styling Macros (ANSI Escape Codes)
+**
+** 1. Macro: Use TABLE_FMT_CELL_STYLE(style, "text") for automatic resetting.
+**           Note: 'style' can be one or more tags (e.g. TABLE_FMT_BOLD TABLE_FMT_RED).
+** 2. Tags:  Stack tags like TABLE_FMT_BOLD TABLE_FMT_RED "text" TABLE_FMT_RESET.
+**           IMPORTANT: When using tags manually, you MUST append TABLE_FMT_RESET
+**           to prevent styles from "bleeding" into table borders or the terminal.
+*/
+
+#define TABLE_FMT_RESET     "\033[0m"
+
+// Convenience macro
+#define TABLE_FMT_CELL_STYLE(style, text) style text TABLE_FMT_RESET
+
+// Text styles
+#define TABLE_FMT_BOLD      "\033[1m"
+#define TABLE_FMT_ITALIC    "\033[3m"
+#define TABLE_FMT_UNDERLINE "\033[4m"
+
+// Colors
+#define TABLE_FMT_BLACK     "\033[30m"
+#define TABLE_FMT_RED       "\033[31m"
+#define TABLE_FMT_GREEN     "\033[32m"
+#define TABLE_FMT_YELLOW    "\033[33m"
+#define TABLE_FMT_BLUE      "\033[34m"
+#define TABLE_FMT_MAGENTA   "\033[35m"
+#define TABLE_FMT_CYAN      "\033[36m"
+#define TABLE_FMT_WHITE     "\033[37m"
+
+/*
 ** Public types
 */
 
@@ -52,36 +82,6 @@ typedef struct {
     size_t row_data_count;
     size_t num_rows;
 } TableFmt;
-
-/*
-** Styling Macros (ANSI Escape Codes)
-**
-** 1. Macro: Use TABLE_FMT_CELL_STYLE(style, "text") for automatic resetting.
-**           Note: 'style' can be one or more tags (e.g. TABLE_FMT_BOLD TABLE_FMT_RED).
-** 2. Tags:  Stack tags like TABLE_FMT_BOLD TABLE_FMT_RED "text" TABLE_FMT_RESET.
-**           IMPORTANT: When using tags manually, you MUST append TABLE_FMT_RESET
-**           to prevent styles from "bleeding" into table borders or the terminal.
-*/
-
-#define TABLE_FMT_RESET     "\033[0m"
-
-// Convenience macro
-#define TABLE_FMT_CELL_STYLE(style, text) style text TABLE_FMT_RESET
-
-// Text styles
-#define TABLE_FMT_BOLD      "\033[1m"
-#define TABLE_FMT_ITALIC    "\033[3m"
-#define TABLE_FMT_UNDERLINE "\033[4m"
-
-// Colors
-#define TABLE_FMT_BLACK     "\033[30m"
-#define TABLE_FMT_RED       "\033[31m"
-#define TABLE_FMT_GREEN     "\033[32m"
-#define TABLE_FMT_YELLOW    "\033[33m"
-#define TABLE_FMT_BLUE      "\033[34m"
-#define TABLE_FMT_MAGENTA   "\033[35m"
-#define TABLE_FMT_CYAN      "\033[36m"
-#define TABLE_FMT_WHITE     "\033[37m"
 
 /*
 ** Internal types and data
