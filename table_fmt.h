@@ -217,13 +217,18 @@ static inline TableFmtBorderType table_fmt__get_border_type(const TableFmt *tabl
     return table->config.border_type < 5 ? table->config.border_type : 0;
 }
 
+static inline void table_fmt__write_spaces(FILE *out, size_t n)
+{
+    for (size_t i = 0; i < n; i++) fputc(' ', out);
+}
+
 static inline void table_fmt__print_border_line(const TableFmt *table, size_t *col_widths, size_t style, TableFmt__BorderChar left, TableFmt__BorderChar centre, TableFmt__BorderChar right)
 {
     fputs(TABLE_FMT__BORDER_SETS[style][left], table->config.output_stream);
     for (size_t col = 0; col < table->config.num_cols; ++col) {
         for (size_t i = 0; i < col_widths[col] + (table->config.cell_padding * 2); ++i) {
             if (style == TABLE_FMT_BORDER_PIPE && (i == 0 || i == col_widths[col] + (table->config.cell_padding * 2) - 1)) {
-                fputs(" ", table->config.output_stream);
+                table_fmt__write_spaces(table->config.output_stream, 1);
                 continue;
             };
             fputs(TABLE_FMT__BORDER_SETS[style][TABLE_FMT__BORDER_HORIZONTAL], table->config.output_stream);
@@ -278,20 +283,22 @@ static inline void table_fmt__print_bordered(const TableFmt *table)
             size_t padding_multiplier = 2;
             size_t total_cell_width = col_widths[col] + (table->config.cell_padding * padding_multiplier);
             TableFmt__CellPadding cell_padding = table_fmt__get_cell_padding(table, total_cell_width, content_len);
-            for (size_t i = 0; i < cell_padding.left; ++i) fputc(' ', table->config.output_stream);
+            table_fmt__write_spaces(table->config.output_stream, cell_padding.left);
 
             const char *content = table->row_data[row * table->config.num_cols + col];
             const char* ansi_start = (row == 0) ? (table->config.header_style ? table->config.header_style : "") : "";
             const char* ansi_end = (row == 0 && table->config.header_style) ? TABLE_FMT_RESET : "";
 
-            fprintf(table->config.output_stream, "%s%s%s", ansi_start, content, ansi_end);
+            fputs(ansi_start, table->config.output_stream);
+            fputs(content, table->config.output_stream);
+            fputs(ansi_end, table->config.output_stream);
 
-            for (size_t i = 0; i < cell_padding.right; ++i) fputc(' ', table->config.output_stream);
+            table_fmt__write_spaces(table->config.output_stream, cell_padding.right);
             fputs(TABLE_FMT__BORDER_SETS[style][TABLE_FMT__BORDER_VERTICAL], table->config.output_stream);
         }
         fputc('\n', table->config.output_stream);
         if (row < table->num_rows - 1) {
-            if (table->config.output_format == TABLE_FMT_OUTPUT_PIPE && row != 0)  continue;
+            if (table->config.output_format == TABLE_FMT_OUTPUT_PIPE && row != 0) continue;
             if (row == 0 || table->config.grid_lines) {
                 table_fmt__print_border_line(table, col_widths, style, TABLE_FMT__BORDER_MIDDLE_LEFT, TABLE_FMT__BORDER_MIDDLE_MIDDLE, TABLE_FMT__BORDER_MIDDLE_RIGHT);
             }
@@ -319,11 +326,11 @@ static inline void table_fmt__print_space(const TableFmt *table)
             size_t total_cell_width = col_widths[col] + (table->config.cell_padding * padding_multiplier);
             TableFmt__CellPadding cell_padding = table_fmt__get_cell_padding(table, total_cell_width, content_len);
             size_t left_padding = (col == 0 && table->config.alignment == TABLE_FMT_ALIGN_LEFT) ? 0 : cell_padding.left;
-            for (size_t i = 0; i < left_padding; ++i) fputc(' ', table->config.output_stream);
+            table_fmt__write_spaces(table->config.output_stream, left_padding);
             fputs(table->row_data[row * table->config.num_cols + col], table->config.output_stream);
             size_t right_padding = (col == table->config.num_cols - 1 && table->config.alignment == TABLE_FMT_ALIGN_RIGHT) ? 0 : cell_padding.right;
-            for (size_t i = 0; i < right_padding; ++i) fputc(' ', table->config.output_stream);
-            if (col < table->config.num_cols - 1) fputc(' ', table->config.output_stream);
+            table_fmt__write_spaces(table->config.output_stream, right_padding);
+            if (col < table->config.num_cols - 1) table_fmt__write_spaces(table->config.output_stream, 1);
         }
         fputc('\n', table->config.output_stream);
     }
@@ -336,7 +343,7 @@ static inline void table_fmt__print_space(const TableFmt *table)
 
 static inline TableFmt *table_fmt_init(TableFmtConfig config)
 {
-    if (config.num_cols <= 0) return NULL;
+    if (config.num_cols == 0) return NULL;
 
     TableFmt *table = malloc(sizeof(TableFmt));
     if (!table) return NULL;
