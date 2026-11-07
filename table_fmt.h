@@ -143,13 +143,17 @@ static inline bool table_fmt__realloc(TableFmt *table)
     return true;
 }
 
-static inline size_t table_fmt__content_visible_length(const char *str) {
+static size_t table_fmt__content_visible_length(const char *s)
+{
     size_t len = 0;
-    int in_escape = false;
-    for (const char *p = str; *p; ++p) {
-        if (*p == '\033') in_escape = true;
-        else if (in_escape && *p == 'm') in_escape = false;
-        else if (!in_escape) ++len;
+    bool in_escape = false;
+    for (const unsigned char *p = (const unsigned char *)s; *p; p++) {
+        unsigned char c = *p;
+        if (c == 0x1b) { in_escape = true; continue; }
+        if (in_escape) { if (c == 'm') in_escape = false; continue; }
+        // UTF-8 continuation byte
+        if ((c & 0xc0) == 0x80) continue;
+        len++;
     }
     return len;
 }
